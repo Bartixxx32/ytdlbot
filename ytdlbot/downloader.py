@@ -192,6 +192,7 @@ def ytdl_download(url, tempdir, bm, **kwargs) -> dict:
     ydl_opts = {
         'progress_hooks': [lambda d: download_hook(d, bm)],
         'outtmpl': output,
+        'ignoreerrors': True,
         'restrictfilenames': False,
         'quiet': True,
         "proxy": os.getenv("YTDL_PROXY")
