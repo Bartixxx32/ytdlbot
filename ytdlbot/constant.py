@@ -22,7 +22,7 @@ class BotText:
     start = "Welcome to YouTube Download bot. Type /help for more information."
 
     help = f"""
-1. This bot should works at all times. If it doesn't, try to send the link again or DM @BennyThink
+1. This bot should works at all times. If it doesn't, try to send the link again or DM @Bartixxx
 
 2. At this time of writing, this bot consumes hundreds of GigaBytes of network traffic per day. 
 In order to avoid being abused, 
@@ -37,7 +37,7 @@ every one can use this bot within **{sizeof_fmt(QUOTA)} of quota for every {int(
 6. Request limit is applied for everyone, excluding VIP users.
     """ if ENABLE_VIP else "Help text"
 
-    about = "YouTube-DL by @BennyThink. Open source on GitHub: https://github.com/tgbot-collection/ytdlbot"
+     about = "Just send me link to download :P if you want you can tweak settings using /settings"
 
     terms = f"""
 1. You can use this service, free of charge, {sizeof_fmt(QUOTA)} per {int(EX / 3600)} hours.
