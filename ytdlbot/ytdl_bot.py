@@ -15,17 +15,19 @@ import time
 import traceback
 import typing
 from io import BytesIO
-from youtubesearchpython import VideosSearch
+
 import pyrogram.errors
 from apscheduler.schedulers.background import BackgroundScheduler
 from pyrogram import Client, filters, types
 from pyrogram.errors.exceptions.bad_request_400 import UserNotParticipant
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from tgbot_ping import get_runtime
+from token_bucket import Limiter, MemoryStorage
+from youtubesearchpython import VideosSearch
 
 from client_init import create_app
-from config import (AUTHORIZED_USER, ENABLE_CELERY, ENABLE_VIP, OWNER,
-                    REQUIRED_MEMBERSHIP)
+from config import (AUTHORIZED_USER, BURST, ENABLE_CELERY, ENABLE_FFMPEG,
+                    ENABLE_VIP, OWNER, RATE, REQUIRED_MEMBERSHIP)
 from constant import BotText
 from db import InfluxDB, MySQL, Redis
 from limit import VIP, verify_payment
@@ -42,6 +44,11 @@ app = create_app()
 bot_text = BotText()
 
 logging.info("Authorized users are %s", AUTHORIZED_USER)
+
+# rate, capacity
+mem = MemoryStorage()
+# 5 minutes, 2 bursts
+lim = Limiter(1 / RATE, BURST, mem)
 
 
 def private_use(func):
@@ -144,7 +151,7 @@ def patch_handler(client: "Client", message: "types.Message"):
 
 
 @app.on_message(filters.command(["uncache"]))
-def patch_handler(client: "Client", message: "types.Message"):
+def uncache_handler(client: "Client", message: "types.Message"):
     username = message.from_user.username
     link = message.text.split()[1]
     if username == OWNER:
@@ -156,11 +163,19 @@ def patch_handler(client: "Client", message: "types.Message"):
 def ping_handler(client: "Client", message: "types.Message"):
     chat_id = message.chat.id
     client.send_chat_action(chat_id, "typing")
-    client.send_message(chat_id, f"Pong")
+    if os.uname().sysname == "Darwin" or ".heroku" in os.getenv("PYTHONHOME", ""):
+        bot_info = "ping unavailable."
+    else:
+        bot_info = get_runtime("ytdlbot_ytdl_1", "YouTube-dl")
+    if message.chat.username == OWNER:
+        stats = bot_text.ping_worker()[:1000]
+        client.send_document(chat_id, Redis().generate_file(), caption=f"{bot_info}\n\n{stats}")
+    else:
+        client.send_message(chat_id, f"{bot_info}")
 
 
 @app.on_message(filters.command(["about"]))
-def help_handler(client: "Client", message: "types.Message"):
+def about_handler(client: "Client", message: "types.Message"):
     chat_id = message.chat.id
     client.send_chat_action(chat_id, "typing")
     client.send_message(chat_id, bot_text.about)
@@ -260,29 +275,37 @@ def download_handler(client: "Client", message: "types.Message"):
     logging.info("start %s", url)
 
     if not re.findall(r"^https?://", url.lower()):
-        red.update_metrics("search_request")
-        # TODO
-        result = VideosSearch(url, limit=5).result().get("result", [])
-        text = ""
-        count = 1
-        buttons = []
-        for item in result:
-            text += f"{count}. {item['title']} - {item['link']}\n\n"
-            buttons.append(
-                InlineKeyboardButton(
-                    f"{count}",
-                    callback_data=f"search_{item['id']}"
-                )
-            )
-            count += 1
-
-        markup = InlineKeyboardMarkup([buttons])
-        client.send_message(chat_id, text, disable_web_page_preview=True, reply_markup=markup)
+        red.update_metrics("bad_request")
+        message.reply_text("I think you should send me a link.", quote=True)
         return
+        # TODO
+        # red.update_metrics("search_request")
+        # result = VideosSearch(url, limit=5).result().get("result", [])
+        # text = ""
+        # count = 1
+        # buttons = []
+        # for item in result:
+        #     text += f"{count}. {item['title']} - {item['link']}\n\n"
+        #     buttons.append(
+        #         InlineKeyboardButton(
+        #             f"{count}",
+        #             callback_data=f"search_{item['id']}"
+        #         )
+        #     )
+        #     count += 1
+        #
+        # markup = InlineKeyboardMarkup([buttons])
+        # client.send_message(chat_id, text, disable_web_page_preview=True, reply_markup=markup)
+        # return
 
     if re.findall(r"^https://www\.youtube\.com/channel/", VIP.extract_canonical_link(url)):
         message.reply_text("Channel download is disabled now. Please send me individual video link.", quote=True)
         red.update_metrics("reject_channel")
+        return
+    # non vip user, consume too many token
+    if (not VIP().check_vip(chat_id)) and (not lim.consume(str(chat_id).encode(), 1)):
+        red.update_metrics("rate_limit")
+        message.reply_text(bot_text.too_fast, quote=True)
         return
 
     red.update_metrics("video_request")
@@ -326,9 +349,13 @@ def download_resolution_callback(client: "Client", callback_query: types.Callbac
 
 @app.on_callback_query(filters.regex(r"convert"))
 def audio_callback(client: "Client", callback_query: types.CallbackQuery):
+    if not ENABLE_FFMPEG:
+        callback_query.answer("Audio conversion is disabled now.")
+        callback_query.message.reply_text("Audio conversion is disabled now.")
+        return
+
     callback_query.answer(f"Converting to audio...please wait patiently")
     Redis().update_metrics("audio_request")
-
     vmsg = callback_query.message
     audio_entrance(vmsg, client)
 
@@ -367,7 +394,7 @@ if __name__ == '__main__':
     scheduler.add_job(auto_restart, 'interval', seconds=5)
     scheduler.add_job(InfluxDB().collect_data, 'interval', seconds=60)
     #  default quota allocation of 10,000 units per day,
-    scheduler.add_job(periodic_sub_check, 'interval', seconds=60 * 60)
+    scheduler.add_job(periodic_sub_check, 'interval', seconds=60 * 30)
     scheduler.start()
     banner = f"""
 ▌ ▌         ▀▛▘     ▌       ▛▀▖              ▜            ▌

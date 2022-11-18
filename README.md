@@ -7,10 +7,16 @@ YouTube Download Bot🚀
 Download videos from YouTube and other platforms through a Telegram Bot
 
 -----
+**READ [FAQ](FAQ.md) FIRST IF YOU ENCOUNTER ANY ISSUES.**
 
+-----
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 Can't deploy? Fork to your personal account and deploy it there!
+
+**Starting November 28, 2022, free Heroku Dynos, free Heroku Postgres, and free Heroku Data for Redis® plans will no
+longer be available.**
+[Heroku Announcement](https://devcenter.heroku.com/articles/free-dyno-hours)
 
 # Usage
 
@@ -23,9 +29,10 @@ Websites [supported by youtube-dl](https://ytdl-org.github.io/youtube-dl/support
 
 I don't have unlimited servers and bandwidth, so I have to make some restrictions.
 
-* 10 GiB one-way traffic per 24 hours for each user
+* 5 GiB one-way traffic per 24 hours for each user
 * maximum 5 minutes streaming conversion support
 * maximum 3 subscriptions
+* limited request in certain time range
 
 You can choose to become 'VIP' if you really need large traffic. And also, you could always deploy your own bot.
 
@@ -122,6 +129,7 @@ you can configure all the following environment variables:
   above `AUTHORIZED_USER`
 
 * ENABLE_CELERY: Distribution mode, default: disable. You'll can setup workers in different locations.
+* ENABLE_FFMPEG: enable ffmpeg so Telegram can stream
 * MYSQL_HOST: you'll have to setup MySQL if you enable VIP mode
 * MYSQL_USER
 * MYSQL_PASS
@@ -256,6 +264,7 @@ https://www.youtube.com/playlist?list=PL1Hdq7xjQCJxQnGc05gS4wzHWccvEJy0w
 https://dmesg.app/m3u8/prog_index.m3u8
 
 ## test twitter
+
 https://twitter.com/nitori_sayaka/status/1526199729864200192
 https://twitter.com/BennyThinks/status/1475836588542341124
 

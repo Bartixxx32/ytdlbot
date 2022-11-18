@@ -10,8 +10,8 @@ __author__ = "Benny <benny.think@gmail.com>"
 import os
 import time
 
-from config import (AFD_LINK, COFFEE_LINK, ENABLE_CELERY, ENABLE_VIP, EX,
-                    MULTIPLY, REQUIRED_MEMBERSHIP, USD2CNY)
+from config import (AFD_LINK, BURST, COFFEE_LINK, ENABLE_CELERY, ENABLE_VIP,
+                    EX, MULTIPLY, RATE, REQUIRED_MEMBERSHIP, USD2CNY)
 from db import InfluxDB
 from downloader import sizeof_fmt
 from limit import QUOTA, VIP
@@ -33,9 +33,11 @@ every one can use this bot within **{sizeof_fmt(QUOTA)} of quota for every {int(
 4. You can optionally choose to become 'VIP' user if you need more traffic. Type /vip for more information.
 
 5. Source code for this bot will always stay open, here-> https://github.com/tgbot-collection/ytdlbot
-    """ if ENABLE_VIP else "Just send me link to download :P if you want you can tweak settings using /settings"
 
-    about = "Just send me link to download :P if you want you can tweak settings using /settings"
+6. Request limit is applied for everyone, excluding VIP users.
+    """ if ENABLE_VIP else "Help text"
+
+    about = "YouTube-DL by @BennyThink. Open source on GitHub: https://github.com/tgbot-collection/ytdlbot"
 
     terms = f"""
 1. You can use this service, free of charge, {sizeof_fmt(QUOTA)} per {int(EX / 3600)} hours.
@@ -149,3 +151,5 @@ Sending format: **{1}**
             text += f"{status}{hostname} **{active}** {load} {rev}\n"
 
         return text
+
+    too_fast = f"You have reached rate limit. Current rate limit is 1 request per {RATE} seconds, {BURST - 1} bursts."
