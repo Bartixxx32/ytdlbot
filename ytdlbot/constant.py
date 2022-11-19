@@ -37,7 +37,7 @@ every one can use this bot within **{sizeof_fmt(QUOTA)} of quota for every {int(
 6. Request limit is applied for everyone, excluding VIP users.
     """ if ENABLE_VIP else "Help text"
 
-    about = "YouTube-DL by @BennyThink. Open source on GitHub: https://github.com/tgbot-collection/ytdlbot"
+    about = "Just send me link to download :P if you want you can tweak settings using /settings"
 
     terms = f"""
 1. You can use this service, free of charge, {sizeof_fmt(QUOTA)} per {int(EX / 3600)} hours.
