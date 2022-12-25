@@ -58,3 +58,4 @@ while [[ $CUR_DURATION -lt $DURATION ]]; do
 
     NEXTFILENAME="$BASENAME-$i.$EXTENSION"
 done
+
