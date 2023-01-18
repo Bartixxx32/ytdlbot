@@ -18,14 +18,9 @@ FILE="$1"
 SIZELIMIT="$2"
 FFMPEG_ARGS="$3"
 
-# Check if the user has permission to read the input file
-if [ ! -r "$FILE" ]; then
-    echo "Error: No permission to read $FILE"
-    exit 1
-fi
-
 # Duration of the source video
 DURATION=$(ffprobe -i "$FILE" -show_entries format=duration -v quiet -of default=noprint_wrappers=1:nokey=1|cut -d. -f1)
+
 # Duration that has been encoded so far
 CUR_DURATION=0
 
@@ -46,12 +41,6 @@ echo "Duration of source video: $DURATION"
 
 # Until the duration of all partial videos has reached the duration of the source video
 while [[ $CUR_DURATION -lt $DURATION ]]; do
-    # Check if the user has permission to write to the output file
-    if [ -e "$NEXTFILENAME" ] && [ ! -w "$NEXTFILENAME" ]; then
-        echo "Error: No permission to write to $NEXTFILENAME"
-        exit 1
-    fi
-
     # Encode next part
     echo ffmpeg -i "$FILE" -ss "$CUR_DURATION" -fs "$SIZELIMIT" $FFMPEG_ARGS "$NEXTFILENAME"
     ffmpeg -ss "$CUR_DURATION" -i "$FILE" -fs "$SIZELIMIT" $FFMPEG_ARGS "$NEXTFILENAME"
