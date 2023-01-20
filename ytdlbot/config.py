@@ -27,7 +27,7 @@ TG_MAX_SIZE = 2 * 1024 * 1024 * 1024 * 0.99
 # TG_MAX_SIZE = 10 * 1024 * 1024
 
 EX = os.getenv("EX", 24 * 3600)
-MULTIPLY = os.getenv("MULTIPLY", 10)  # VIP1 is 5*5-25G, VIP2 is 50G
+MULTIPLY = os.getenv("MULTIPLY", 5)  # VIP1 is 5*5-25G, VIP2 is 50G
 USD2CNY = os.getenv("USD2CNY", 6)  # $5 --> ¥30
 
 ENABLE_VIP = os.getenv("VIP", False)
@@ -35,6 +35,7 @@ MAX_DURATION = int(os.getenv("MAX_DURATION", 60))
 AFD_LINK = os.getenv("AFD_LINK", "https://afdian.net/@BennyThink")
 COFFEE_LINK = os.getenv("COFFEE_LINK", "https://www.buymeacoffee.com/bennythink")
 COFFEE_TOKEN = os.getenv("COFFEE_TOKEN")
+PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN")
 AFD_TOKEN = os.getenv("AFD_TOKEN")
 AFD_USER_ID = os.getenv("AFD_USER_ID")
 OWNER = os.getenv("OWNER", "BennyThink")
@@ -58,7 +59,5 @@ ARCHIVE_ID = os.getenv("ARCHIVE_ID")
 
 IPv6 = os.getenv("IPv6", False)
 ENABLE_FFMPEG = os.getenv("ENABLE_FFMPEG", False)
-# 0.01 means basically no limit
-RATE = float(os.getenv("RATE", 0.01))
-BURST = int(os.getenv("BURST", 3))
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN") or "1234"
+RATE = float(os.getenv("RATE", 1))
+BURST = int(os.getenv("BURST", 10))
