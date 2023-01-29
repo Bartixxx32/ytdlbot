@@ -26,8 +26,8 @@ if os.uname().sysname == "Darwin":
 TG_MAX_SIZE = 2 * 1024 * 1024 * 1024 * 0.99
 # TG_MAX_SIZE = 10 * 1024 * 1024
 
-EX = int(os.getenv("EX", 24 * 3600))
-MULTIPLY = os.getenv("MULTIPLY", 10)  # VIP1 is 5*5-25G, VIP2 is 50G
+EX = os.getenv("EX", 24 * 3600)
+MULTIPLY = os.getenv("MULTIPLY", 5)  # VIP1 is 5*5-25G, VIP2 is 50G
 USD2CNY = os.getenv("USD2CNY", 6)  # $5 --> ¥30
 
 ENABLE_VIP = os.getenv("VIP", False)
@@ -58,7 +58,5 @@ ARCHIVE_ID = os.getenv("ARCHIVE_ID")
 
 IPv6 = os.getenv("IPv6", False)
 ENABLE_FFMPEG = os.getenv("ENABLE_FFMPEG", False)
-# 0.01 means basically no limit
-RATE = float(os.getenv("RATE", 0.01))
+RATE = float(os.getenv("RATE", 60 * 5))
 BURST = int(os.getenv("BURST", 3))
-PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN") or "1234"
