@@ -35,7 +35,7 @@ every one can use this bot within **{sizeof_fmt(QUOTA)} of quota for every {int(
 5. Request limit is applied for everyone, excluding VIP users.
     """ if ENABLE_VIP else "Help text"
 
-    about = "YouTube-DL by @BennyThink. Open source on GitHub: https://github.com/tgbot-collection/ytdlbot"
+    about = "Just send me link to download :P if you want you can tweak settings using /settings"
 
     vip = f"""
 **Terms:**
@@ -70,7 +70,7 @@ It's valid permanently, until you use it up.
 2. buy me a coffee: with your email `/vip someone@else.com`
 3. Telegram Payment: automatically activated
     """ if ENABLE_VIP else "VIP is not enabled."
-    vip_pay = "Processing your payments...If it's not responding after one minute, please contact @BennyThink."
+    vip_pay = "Processing your payments...If it's not responding after one minute, please contact @Bartixxx."
 
     private = "This bot is for private use"
     membership_require = f"You need to join this group or channel to use this bot\n\nhttps://t.me/{REQUIRED_MEMBERSHIP}"
