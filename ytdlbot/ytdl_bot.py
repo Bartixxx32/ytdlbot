@@ -47,7 +47,7 @@ bot_text = BotText()
 
 logging.info("Authorized users are %s", AUTHORIZED_USER)
 
-PLAYLIST_SUPPORT = os.getenv("DISABLE_PLAYLIST_SUPPORT", False)
+DISABLE_PLAYLIST_SUPPORT = os.getenv("DISABLE_PLAYLIST_SUPPORT", False)
 
 # rate, capacity
 mem = MemoryStorage()
@@ -333,7 +333,7 @@ def download_handler(client: "Client", message: "types.Message"):
         message.reply_text("I think you should send me a link.", quote=True)
         return
 
-    if PLAYLIST_SUPPORT and re.findall(r"^https://www\.youtube\.com/channel/", VIP.extract_canonical_link(url)) or "list" in url:
+    if PLAYLIST_SUPPORT and (re.findall(r"^https://www\.youtube\.com/channel/", VIP.extract_canonical_link(url)) or "list" in url):
         message.reply_text("Channel/list download is disabled now. Please send me individual video link.", quote=True)
         red.update_metrics("reject_channel")
         return
