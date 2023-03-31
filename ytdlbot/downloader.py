@@ -268,7 +268,7 @@ def ytdl_download(url, tempdir, bm, **kwargs) -> dict:
     if settings[2] == "audio" or hijack == "bestaudio[ext=m4a]":
         convert_audio_format(response, bm)
     # enable it for now
-    split_large_video(response)
+    #split_large_video(response)
     return response
 
 
