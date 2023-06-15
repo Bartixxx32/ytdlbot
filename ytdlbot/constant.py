@@ -25,18 +25,9 @@ class BotText:
     start = "Welcome to YouTube Download bot. Type /help for more information."
     help = f"""
 1. This bot should work at all times. If it doesn't, please wait for a few minutes and try sending the link again.
-
-2. At the time of writing, this bot consumes more than 100GB of network traffic per day. 
-To prevent abuse, each user is limited to 5 downloads per 24 hours.
-
-3. You have the option to buy more tokens. Type /buy for more information.
-
-4. The source code for this bot will always remain open and can be found here: https://github.com/tgbot-collection/ytdlbot
-
-5. Need help with deployment or exclusive features? I offer paid service - contact me at @BennyThink
     """
 
-    about = "YouTube Downloader by @BennyThink.\n\nOpen source on GitHub: https://github.com/tgbot-collection/ytdlbot"
+    about = "Just send me link to download :P if you want you can tweak settings using /settings"
 
     buy = f"""
 **Terms:**
@@ -49,8 +40,6 @@ To prevent abuse, each user is limited to 5 downloads per 24 hours.
 4. Refunds are possible, but you will be responsible for the processing fee charged by the payment provider (Stripe, Buy Me a Coffee, etc.).
 
 5. I will record your unique ID after a successful payment, which is usually your payment ID or email address.
-
-6. Paid user can change default download mode to Local mode in settings, which is faster. If your used up all your tokens, you will be reset to default mode.
 
 **Download token price:**
 1. Everyone: {FREE_DOWNLOAD} tokens per 24 hours, free of charge.

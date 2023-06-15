@@ -7,7 +7,7 @@ RUN pip3 install --user -r /tmp/requirements.txt && rm /tmp/requirements.txt
 
 FROM python:3.10-alpine
 WORKDIR /ytdlbot/ytdlbot
-ENV TZ=Europe/Stockholm
+ENV TZ=Europe/Berlin
 
 COPY apk.txt /tmp/
 RUN apk update && xargs apk add  < /tmp/apk.txt
