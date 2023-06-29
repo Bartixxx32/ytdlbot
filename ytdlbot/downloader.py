@@ -171,8 +171,7 @@ def ytdl_download(url: str, tempdir: str, bm, **kwargs) -> list:
         ]
     formats = [
         # webm and av01 are not streamable on telegram, so we'll extract mp4 and not av01 codec
-        "bestvideo[ext=mp4][vcodec!*=av01]+bestaudio[ext=m4a]/bestvideo+bestaudio",
-        "bestvideo[vcodec^=avc]+bestaudio[acodec^=mp4a]/best[vcodec^=avc]/best",
+        "bestvideo+bestaudio",
         None,
     ]
     adjust_formats(chat_id, url, formats, hijack)
