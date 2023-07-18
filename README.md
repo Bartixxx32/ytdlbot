@@ -32,7 +32,7 @@ Websites [supported by youtube-dl](https://ytdl-org.github.io/youtube-dl/support
 
 Due to limitations on servers and bandwidth, there are some restrictions on this free service.
 
-* Each user is limited to 5 free downloads per 24-hour period
+* Each user is limited to 20 free downloads per 24-hour period
 * there is a maximum of three subscriptions allowed for YouTube channels.
 
 If you need more downloads, you can purchase additional tokens. Additionally, you have the option of deploying your
@@ -271,7 +271,9 @@ https://twitter.com/BennyThinks/status/1475836588542341124
 ## Test instagram
 
 https://www.instagram.com/p/ClBSqo3PkJw/
+
 https://www.instagram.com/p/CaiAHoWDnrM/
+
 https://www.instagram.com/p/CZtUDyyv1u1/
 
 # Donation
