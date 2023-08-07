@@ -276,7 +276,7 @@ def settings_handler(client: Client, message: types.Message):
         ]
     )
 
-    client.send_message(chat_id, BotText.settings.format(data[1], data[2]) + mode_text, reply_markup=markup)
+    client.send_message(chat_id, BotText.settings.format(data[1]+".", data[2]+".") + mode_text, reply_markup=markup)
 
 
 @app.on_message(filters.command(["buy"]))
