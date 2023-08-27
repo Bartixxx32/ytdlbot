@@ -13,6 +13,7 @@ import os
 import pathlib
 import random
 import re
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -26,25 +27,23 @@ import filetype
 import psutil
 import pyrogram.errors
 import requests
-import sentry_sdk
 from apscheduler.schedulers.background import BackgroundScheduler
 from celery import Celery
 from celery.worker.control import Panel
 from pyrogram import Client, idle, types
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-from sentry_sdk.integrations.celery import CeleryIntegration
 
 from channel import Channel
 from client_init import create_app
 from config import (
     ARCHIVE_ID,
     BROKER,
-    DSN,
     ENABLE_CELERY,
     ENABLE_QUEUE,
     ENABLE_VIP,
     OWNER,
+    RCLONE_PATH,
     RATE_LIMIT,
     WORKERS,
 )
@@ -74,8 +73,6 @@ channel = Channel()
 
 session = "ytdl-celery"
 celery_client = create_app(session)
-if DSN:
-    sentry_sdk.init(DSN, integrations=[CeleryIntegration()])
 
 
 def get_messages(chat_id, message_id):
@@ -283,6 +280,11 @@ def ytdl_normal_download(client: Client, bot_msg: typing.Union[types.Message, ty
 
     bot_msg.edit_text("Download success!✅")
 
+    # setup rclone environment var to back up the downloaded file
+    if RCLONE_PATH:
+        for item in os.listdir(temp_dir.name):
+            logging.info("Copying %s to %s", item, RCLONE_PATH)
+            shutil.copy(os.path.join(temp_dir.name, item), RCLONE_PATH)
     temp_dir.cleanup()
 
 
