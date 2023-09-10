@@ -356,8 +356,6 @@ def link_checker(url: str) -> str:
     ):
         return "Playlist or channel links are disabled."
 
-    if re.findall(r"m3u8|\.m3u8|\.m3u$", url.lower()):
-        return "m3u8 links are disabled."
 
     with contextlib.suppress(yt_dlp.utils.DownloadError):
         if ytdl.extract_info(url, download=False).get("live_status") == "is_live":
