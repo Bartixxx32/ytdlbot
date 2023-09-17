@@ -358,7 +358,7 @@ def link_checker(url: str) -> str:
         return "Playlist or channel links are disabled."
 
     if not M3U8_SUPPORT and (
-        re.findall(r"m3u8|\.m3u8|\.m3u$", url.lower()):
+        re.findall(r"m3u8|\.m3u8|\.m3u$", url.lower())
     ):
         return "m3u8 links are disabled."
 
