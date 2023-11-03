@@ -26,14 +26,7 @@ import requests
 import yt_dlp as ytdl
 from tqdm import tqdm
 
-from config import (
-    AUDIO_FORMAT,
-    ENABLE_ARIA2,
-    ENABLE_FFMPEG,
-    SS_YOUTUBE,
-    TG_MAX_SIZE,
-    IPv6,
-)
+from config import AUDIO_FORMAT, ENABLE_ARIA2, ENABLE_FFMPEG, TG_MAX_SIZE, IPv6, SS_YOUTUBE
 from limit import Payment
 from utils import adjust_formats, apply_log_formatter, current_time, sizeof_fmt
 
@@ -42,7 +35,7 @@ apply_log_formatter()
 
 
 def edit_text(bot_msg, text: str):
-    key = f"{bot_msg.chat.id}-{bot_msg.id}"
+    key = f"{bot_msg.chat.id}-{bot_msg.message_id}"
     # if the key exists, we shouldn't send edit message
     if not r.exists(key):
         time.sleep(random.random())
@@ -176,12 +169,17 @@ def ytdl_download(url: str, tempdir: str, bm, **kwargs) -> list:
             "--max-concurrent-downloads=16",
             "--split=16",
         ]
-    formats = [
-        # webm , vp9 and av01 are not streamable on telegram, so we'll extract mp4 and not av01 codec
-        "bestvideo[ext=mp4][vcodec!*=av01][vcodec!*=vp09]+bestaudio[ext=m4a]/bestvideo+bestaudio",
-        "bestvideo[vcodec^=avc]+bestaudio[acodec^=mp4a]/best[vcodec^=avc]/best",
-        None,
-    ]
+    if url.startswith("https://drive.google.com"):
+        # Always use the `source` format for Google Drive URLs.
+        formats = ["source"]
+    else:
+        # Use the default formats for other URLs.
+        formats = [
+            # webm , vp9 and av01 are not streamable on telegram, so we'll extract only mp4
+            "bestvideo[ext=mp4][vcodec!*=av01][vcodec!*=vp09]+bestaudio[ext=m4a]/bestvideo+bestaudio",
+            "bestvideo[vcodec^=avc]+bestaudio[acodec^=mp4a]/best[vcodec^=avc]/best",
+            None,
+        ]
     adjust_formats(chat_id, url, formats, hijack)
     if download_instagram(url, tempdir):
         return list(pathlib.Path(tempdir).glob("*"))
