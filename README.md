@@ -2,14 +2,10 @@
 
 [![docker image](https://github.com/tgbot-collection/ytdlbot/actions/workflows/builder.yaml/badge.svg)](https://github.com/tgbot-collection/ytdlbot/actions/workflows/builder.yaml)
 
-YouTube Download Bot🚀
+YouTube Download Bot🚀🎬⬇️
 
-This Telegram bot allows you to download videos from YouTube and other supported platforms, including Instagram!
+This Telegram bot allows you to download videos from YouTube and other supported websites, including Instagram!
 
------
-**READ [FAQ](FAQ.md) FIRST IF YOU ENCOUNTER ANY ISSUES.**
-
------
 <details> <summary>Deploy to heroku</summary>
 
 <a href="https://heroku.com/deploy"><img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy to Heroku"></a>
@@ -25,15 +21,17 @@ longer be available.**
 
 [https://t.me/benny_ytdlbot](https://t.me/benny_ytdlbot)
 
+Join Telegram Channel https://t.me/+OGRC8tp9-U9mZDZl for updates.
+
 Send link directly to the bot. Any
-Websites [supported by youtube-dl](https://ytdl-org.github.io/youtube-dl/supportedsites.html) will work to.
+Websites [supported by yt-dlp](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) will work t0o.
 
 # Limitations of my bot
 
 Due to limitations on servers and bandwidth, there are some restrictions on this free service.
 
 * Each user is limited to 20 free downloads per 24-hour period
-* there is a maximum of three subscriptions allowed for YouTube channels.
+* Maximum of three subscriptions allowed for YouTube channels.
 
 If you need more downloads, you can purchase additional tokens. Additionally, you have the option of deploying your
 own bot. See below instructions.
@@ -44,14 +42,14 @@ own bot. See below instructions.
 2. ads free
 3. support progress bar
 4. audio conversion
-5. playlist support
-6. payment support
-7. support different video resolutions
-8. support sending as file or streaming as video
-9. supports celery worker distribution - faster than before.
+5. playlist download
+6. payment support: afdian, buy me a coffee, Telegram Payment and Tron(TRX)
+7. different video resolutions
+8. sending as file or streaming as video
+9. celery worker distribution - faster than before.
 10. subscriptions to YouTube Channels
 11. cache mechanism - download once for the same video.
-12. support instagram posts
+12. instagram posts
 
 # Screenshots
 
@@ -71,23 +69,47 @@ own bot. See below instructions.
 
 This bot can be deployed on any platform that supports Python.
 
-Need help with deployment or exclusive features? I offer paid service - contact me at @BennyThink
-
 ## Run natively on your machine
 
 To deploy this bot, follow these steps:
 
-1. Clone the code from the repository.
-2. Install FFmpeg.
-3. Install Python 3.6 or a later version.
-4. Install Aria2 and add it to the PATH.
-5. Install the required packages by running `pip3 install -r requirements.txt`.
-6. Set the environment variables `TOKEN`, `APP_ID`, `APP_HASH`, and any others that you may need.
-7. Run `python3 ytdl_bot.py`.
+1. Install bot dependencies
+   * Install Python 3.10 or a later version, FFmpeg.
+   * (optional)Aria2 and add it to the PATH.
+
+2. Clone the code from the repository and cd into it.
+   * ```Bash
+     git clone https://github.com/tgbot-collection/ytdlbot
+     ```
+   * ```Bash
+     cd ytdlbot/
+     ```
+3. Creating a virtual environment and installing required modules in Python.
+   * ```Python
+     python -m venv venv
+     ```
+   * ```Bash
+     source venv/bin/activate   # Linux
+     #or
+     .\venv\Scripts\activate   # Windows
+     ```
+   * ```Python
+     pip install --upgrade pip
+     ```
+   * ```Python
+     pip install -r requirements.txt
+     ```
+4. Set the environment variables `TOKEN`, `APP_ID`, `APP_HASH`, and any others that you may need.
+   * Change values in ytdlbot/config.py or
+   * Use export APP_ID=111 APP_HASH=111 TOKEN=123
+5. Finally, run the bot with
+   * ```Python
+     python ytdl_bot.py
+     ```
 
 ## Docker
 
-This bot has a simple one-line code and some functions, such as VIP and ping, are disabled.
+One line command to run the bot
 
 ```shell
 docker run -e APP_ID=111 -e APP_HASH=111 -e TOKEN=370FXI bennythink/ytdlbot
@@ -96,7 +118,7 @@ docker run -e APP_ID=111 -e APP_HASH=111 -e TOKEN=370FXI bennythink/ytdlbot
 # Complete deployment guide for docker-compose
 
 * contains every functionality
-* compatible with amd64, arm64 and armv7l
+* compatible with amd64 and arm64
 
 ## 1. get docker-compose.yml
 
@@ -131,7 +153,6 @@ You can configure all the following environment variables:
 * AUTHORIZED_USER: only authorized users can use the bot
 * REQUIRED_MEMBERSHIP: group or channel username, user must join this group to use the bot
 * ENABLE_CELERY: celery mode, default: disable
-* ENABLE_QUEUE: celery queue
 * BROKER: celery broker, should be redis://redis:6379/0
 * MYSQL_HOST:MySQL host
 * MYSQL_USER: MySQL username
@@ -149,6 +170,8 @@ You can configure all the following environment variables:
 * GOOGLE_API_KEY: YouTube API key, required for YouTube video subscription.
 * RCLONE_PATH: rclone path to upload files to cloud storage
 * TMPFILE_PATH: tmpfile path(file download path)
+* TRONGRID_KEY: TronGrid key, better use your own key to avoid rate limit
+* TRON_MNEMONIC: Tron mnemonic, the default one is on nile testnet.
 
 ## 3.2 Set up init data
 
@@ -156,7 +179,7 @@ If you only need basic functionality, you can skip this step.
 
 ### 3.2.1 Create MySQL db
 
-Required for VIP, settings, YouTube subscription.
+Required for VIP(Download token), settings, YouTube subscription.
 
 ```shell
 docker-compose up -d
@@ -179,15 +202,11 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import dbm;dbm.open("flower","n");exit()
 ```
 
-### 3.2.3 Setup instagram cookies
-
-You don't need to do this anymore! This bot support instagram posts out of the box, including photos, videos and reels.
-
 ## 3.3 Tidy docker-compose.yml
 
 In `flower` service section, you may want to change your basic authentication username password and publish port.
 
-You can also limit CPU and RAM usage by adding a `deploy' key:
+You can also limit CPU and RAM usage by adding a `deploy` key, use `--compatibility` when deploying.
 
 ```docker
     deploy:
@@ -196,8 +215,6 @@ You can also limit CPU and RAM usage by adding a `deploy' key:
           cpus: '0.5'
           memory: 1500M
 ```
-
-Be sure to use `--compatibility` when deploying.
 
 ## 4. run
 
@@ -231,7 +248,7 @@ On the other machine:
 docker-compose -f worker.yml up -d
 ```
 
-**⚠️ Please bear in mind that you should not publish Redis directly on the internet.
+**⚠️ You should not publish Redis directly on the internet.
 Instead, you can use WireGuard to wrap it up for added security.**
 
 ## kubernetes
@@ -273,13 +290,17 @@ https://twitter.com/BennyThinks/status/1475836588542341124
 
 ## Test instagram
 
-https://www.instagram.com/p/ClBSqo3PkJw/
-
-https://www.instagram.com/p/CaiAHoWDnrM/
-
-https://www.instagram.com/p/CZtUDyyv1u1/
+* single image: https://www.instagram.com/p/CXpxSyOrWCA/
+* single video: https://www.instagram.com/p/Cah_7gnDVUW/
+* reels: https://www.instagram.com/p/C0ozGsjtY0W/
+* image carousel: https://www.instagram.com/p/C0ozPQ5o536/
+* video and image carousel: https://www.instagram.com/p/C0ozhsVo-m8/
 
 # Donation
+
+Found this bot useful? You can donate to support the development of this bot.
+
+## Donation Platforms
 
 * [Buy me a coffee](https://www.buymeacoffee.com/bennythink)
 * [Afdian](https://afdian.net/@BennyThink)
@@ -287,14 +308,22 @@ https://www.instagram.com/p/CZtUDyyv1u1/
 
 ## Stripe
 
-You can choose to donate via Stripe by clicking the button below.
+You can choose to donate via Stripe.
 
-Select the currency and payment method that suits you.
+| USD(Card, Apple Pay and Google Pay)              | CNY(Card, Apple Pay, Google Pay and Alipay)      |
+|--------------------------------------------------|--------------------------------------------------|
+| [USD](https://buy.stripe.com/cN203sdZB98RevC3cd) | [CNY](https://buy.stripe.com/dR67vU4p13Ox73a6oq) |
+| ![](assets/USD.png)                              | ![](assets/CNY.png)                              |
 
-| USD(Card, Apple Pay and Google Pay)              | SEK(Card, Apple Pay and Google Pay)              | CNY(Card, Apple Pay, Google Pay and Alipay)      |
-|--------------------------------------------------|--------------------------------------------------|--------------------------------------------------|
-| [USD](https://buy.stripe.com/cN203sdZB98RevC3cd) | [SEK](https://buy.stripe.com/bIYbMa9JletbevCaEE) | [CNY](https://buy.stripe.com/dR67vU4p13Ox73a6oq) |
-| ![](assets/USD.png)                              | ![](assets/SEK.png)                              | ![](assets/CNY.png)                              |
+## Cryptocurrency
+
+TRX or USDT(TRC20)
+
+![](assets/tron.png)
+
+```
+TF9peZjC2FYjU4xNMPg3uP4caYLJxtXeJS
+```
 
 # License
 

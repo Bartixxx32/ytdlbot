@@ -24,9 +24,10 @@ import ffpb
 import filetype
 import requests
 import yt_dlp as ytdl
+from pyrogram import types
 from tqdm import tqdm
 
-from config import AUDIO_FORMAT, ENABLE_ARIA2, ENABLE_FFMPEG, TG_MAX_SIZE, IPv6, SS_YOUTUBE
+from config import AUDIO_FORMAT, ENABLE_ARIA2, ENABLE_FFMPEG, TG_MAX_SIZE, IPv6
 from limit import Payment
 from utils import adjust_formats, apply_log_formatter, current_time, sizeof_fmt
 
@@ -34,8 +35,8 @@ r = fakeredis.FakeStrictRedis()
 apply_log_formatter()
 
 
-def edit_text(bot_msg, text: str):
-    key = f"{bot_msg.chat.id}-{bot_msg.message_id}"
+def edit_text(bot_msg: types.Message, text: str):
+    key = f"{bot_msg.chat.id}-{bot_msg.id}"
     # if the key exists, we shouldn't send edit message
     if not r.exists(key):
         time.sleep(random.random())
@@ -81,7 +82,7 @@ def remove_bash_color(text):
 
 
 def download_hook(d: dict, bot_msg):
-    # since we're using celery, server location may be located in different continent.
+    # since we're using celery, server location may be located in different region.
     # Therefore, we can't trigger the hook very often.
     # the key is user_id + download_link
     original_url = d["info_dict"]["original_url"]
@@ -249,29 +250,6 @@ def convert_audio_format(video_paths: list, bm):
             video_paths[index] = new_path
 
 
-def download_instagram(url: str, tempdir: str):
-    if url.startswith("https://www.instagram.com"):
-        logging.info("Requesting instagram download link for %s", url)
-        api = SS_YOUTUBE + f"&url={url}"
-        res = requests.get(api).json()
-        if isinstance(res, dict):
-            downloadable = {i["url"]: i["ext"] for i in res["url"]}
-        else:
-            downloadable = {i["url"]: i["ext"] for item in res for i in item["url"]}
-
-        for link, ext in downloadable.items():
-            save_path = pathlib.Path(tempdir, f"{id(link)}.{ext}")
-            with open(save_path, "wb") as f:
-                f.write(requests.get(link, stream=True).content)
-        # telegram send webp as sticker, so we'll convert it to png
-        for path in pathlib.Path(tempdir).glob("*.webp"):
-            logging.info("Converting %s to png", path)
-            new_path = path.with_suffix(".jpg")
-            ffmpeg.input(path).output(new_path.as_posix()).run()
-            path.unlink()
-        return True
-
-
 def split_large_video(video_paths: list):
     original_video = None
     split = False
@@ -287,6 +265,17 @@ def split_large_video(video_paths: list):
         return [i for i in pathlib.Path(original_video).parent.glob("*")]
 
 
-if __name__ == "__main__":
-    a = download_instagram("https://www.instagram.com/p/CrEAz-AI99Y/", "tmp")
-    print(a)
+def download_instagram(url: str, tempdir: str):
+    if not url.startswith("https://www.instagram.com"):
+        return False
+
+    resp = requests.get(f"http://192.168.6.1:15000/?url={url}").json()
+    if url_results := resp.get("data"):
+        for link in url_results:
+            content = requests.get(link, stream=True).content
+            ext = filetype.guess_extension(content)
+            save_path = pathlib.Path(tempdir, f"{id(link)}.{ext}")
+            with open(save_path, "wb") as f:
+                f.write(content)
+
+        return True
