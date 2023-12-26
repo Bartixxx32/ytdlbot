@@ -1,6 +1,8 @@
 name: docker image builder
 on:
   push:
+    paths-ignore:
+      - '**.md'
     branches:
       - 'master'
 
@@ -59,7 +61,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-             bartixxx32/ytdlbot:latest
+            ${{ steps.dh_string.outputs.lowercase }}
+            ghcr.io/${{ steps.ghcr_string.outputs.lowercase }}
 
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max

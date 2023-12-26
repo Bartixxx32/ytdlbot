@@ -13,15 +13,17 @@ from blinker import signal
 
 # general settings
 WORKERS: int = int(os.getenv("WORKERS", 10))
-PYRO_WORKERS: int = int(os.getenv("PYRO_WORKERS", min(32, (os.cpu_count() or 0) + 4)))
+PYRO_WORKERS: int = int(os.getenv("PYRO_WORKERS", 100))
 APP_ID: int = int(os.getenv("APP_ID", 198214))
 APP_HASH = os.getenv("APP_HASH", "1234b90")
 TOKEN = os.getenv("TOKEN", "1234")
 
 REDIS = os.getenv("REDIS", "redis")
 
-TG_MAX_SIZE = 2000 * 1024 * 1024
-# TG_MAX_SIZE = 10 * 1024 * 1024
+TG_PREMIUM_MAX_SIZE = 4000 * 1024 * 1024
+TG_NORMAL_MAX_SIZE = 2000 * 1024 * 1024
+# TG_NORMAL_MAX_SIZE = 10 * 1024 * 1024
+
 
 EXPIRE = 24 * 3600
 
@@ -35,8 +37,12 @@ AUTHORIZED_USER: str = os.getenv("AUTHORIZED_USER", "")
 REQUIRED_MEMBERSHIP: str = os.getenv("REQUIRED_MEMBERSHIP", "")
 
 # celery related
+IS_BACKUP_BOT = os.getenv("IS_BACKUP_BOT")
 ENABLE_CELERY = os.getenv("ENABLE_CELERY", False)
-BROKER = os.getenv("BROKER", f"redis://{REDIS}:6379/4")
+if IS_BACKUP_BOT:
+    BROKER = os.getenv("BROKER", f"redis://{REDIS}:6379/1")
+else:
+    BROKER = os.getenv("BROKER", f"redis://{REDIS}:6379/0")
 
 MYSQL_HOST = os.getenv("MYSQL_HOST", "mysql")
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
@@ -53,7 +59,6 @@ M3U8_SUPPORT = os.getenv("M3U8_SUPPORT", False)
 ENABLE_ARIA2 = os.getenv("ENABLE_ARIA2", False)
 
 RATE_LIMIT = os.getenv("RATE_LIMIT", 120)
-IS_BACKUP_BOT = os.getenv("IS_BACKUP_BOT")
 RCLONE_PATH = os.getenv("RCLONE")
 # This will set the value for the tmpfile path(download path) if it is set.
 # If TMPFILE is not set, it will return None and use system’s default temporary file path.
@@ -68,9 +73,15 @@ COFFEE_TOKEN = os.getenv("COFFEE_TOKEN")
 AFD_TOKEN = os.getenv("AFD_TOKEN")
 AFD_USER_ID = os.getenv("AFD_USER_ID")
 PROVIDER_TOKEN = os.getenv("PROVIDER_TOKEN") or "1234"
-FREE_DOWNLOAD = os.getenv("FREE_DOWNLOAD", 20)
+FREE_DOWNLOAD = os.getenv("FREE_DOWNLOAD", 10)
 TOKEN_PRICE = os.getenv("BUY_UNIT", 20)  # one USD=20 credits
 TRONGRID_KEY = os.getenv("TRONGRID_KEY", "").split(",")
 # the default mnemonic is for nile testnet
 TRON_MNEMONIC = os.getenv("TRON_MNEMONIC", "cram floor today legend service drill pitch leaf car govern harvest soda")
 TRX_SIGNAL = signal("trx_received")
+
+PREMIUM_USER = int(os.getenv("PREMIUM_USER", "0"))
+
+
+class FileTooBig(Exception):
+    pass

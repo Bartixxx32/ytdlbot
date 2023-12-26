@@ -8,6 +8,7 @@
 __author__ = "Benny <benny.think@gmail.com>"
 
 import contextlib
+import json
 import logging
 import os
 import random
@@ -40,6 +41,7 @@ from config import (
     M3U8_SUPPORT,
     OWNER,
     PLAYLIST_SUPPORT,
+    PREMIUM_USER,
     PROVIDER_TOKEN,
     REQUIRED_MEMBERSHIP,
     TOKEN_PRICE,
@@ -71,7 +73,7 @@ def private_use(func):
         chat_id = getattr(message.from_user, "id", None)
 
         # message type check
-        if message.chat.type != enums.ChatType.PRIVATE and not message.text.lower().startswith("/ytdl"):
+        if message.chat.type != enums.ChatType.PRIVATE and not getattr(message, "text", "").lower().startswith("/ytdl"):
             logging.debug("%s, it's annoying me...🙄️ ", message.text)
             return
 
@@ -315,6 +317,21 @@ def tronpayment_btn_calback(client: Client, callback_query: types.CallbackQuery)
         client.send_photo(chat_id, bio, caption=f"Send any amount of TRX to `{addr}`")
 
 
+@app.on_callback_query(filters.regex(r"premium.*"))
+def premium_click(client: Client, callback_query: types.CallbackQuery):
+    data = callback_query.data
+    if data == "premium-yes":
+        callback_query.answer("Seeking premium user...")
+        callback_query.message.edit_text("Please wait patiently...no progress bar will be shown.")
+        replied = callback_query.message.reply_to_message
+        data = {"url": replied.text, "user_id": callback_query.message.chat.id}
+        client.send_message(PREMIUM_USER, json.dumps(data), disable_notification=True, disable_web_page_preview=True)
+    else:
+        callback_query.answer("Cancelled.")
+        original_text = callback_query.message.text
+        callback_query.message.edit_text(original_text.split("\n")[0])
+
+
 @app.on_callback_query(filters.regex(r"bot-payments-.*"))
 def bot_payment_btn_calback(client: Client, callback_query: types.CallbackQuery):
     callback_query.answer("Generating invoice...")
@@ -343,6 +360,22 @@ def redeem_handler(client: Client, message: types.Message):
     unique = text.replace("/redeem", "").strip()
     msg = payment.verify_payment(chat_id, unique)
     message.reply_text(msg, quote=True)
+
+
+@app.on_message(filters.user(PREMIUM_USER) & filters.incoming & filters.caption)
+def premium_forward(client: Client, message: types.Message):
+    media = message.video or message.audio or message.document
+    target_user = media.file_name.split(".")[0]
+    client.forward_messages(target_user, message.chat.id, message.id)
+
+
+@app.on_message(filters.command(["ban"]) & filters.user(PREMIUM_USER))
+def ban_handler(client: Client, message: types.Message):
+    replied = message.reply_to_message.text
+    user_id = json.loads(replied).get("user_id")
+    redis = Redis()
+    redis.r.hset("ban", user_id, 1)
+    message.reply_text(f"Done, banned {user_id}.", quote=True)
 
 
 def generate_invoice(amount: int, title: str, description: str, payload: str):
@@ -451,7 +484,7 @@ def download_handler(client: Client, message: types.Message):
 
         client.send_chat_action(chat_id, enums.ChatAction.UPLOAD_VIDEO)
         bot_msg.chat = message.chat
-        ytdl_download_entrance(bot_msg, url)
+        ytdl_download_entrance(client, bot_msg, url)
 
 
 @app.on_callback_query(filters.regex(r"document|video|audio"))
@@ -482,7 +515,7 @@ def audio_callback(client: Client, callback_query: types.CallbackQuery):
 
     callback_query.answer(f"Converting to audio...please wait patiently")
     redis.update_metrics("audio_request")
-    audio_entrance(callback_query.message)
+    audio_entrance(client, callback_query.message)
 
 
 @app.on_callback_query(filters.regex(r"Local|Celery"))
@@ -500,8 +533,7 @@ def periodic_sub_check():
             logging.info(f"periodic update:{video_url} - {uids}")
             for uid in uids:
                 try:
-                    bot_msg: types.Message | Any = app.send_message(uid, f"{video_url} is out. Watch it on YouTube")
-                    # ytdl_download_entrance(app, bot_msg, video_url, mode="direct")
+                    app.send_message(uid, f"{video_url} is out. Watch it on YouTube")
                 except (exceptions.bad_request_400.PeerIdInvalid, exceptions.bad_request_400.UserIsBlocked) as e:
                     logging.warning("User is blocked or deleted. %s", e)
                     channel.deactivate_user_subscription(uid)

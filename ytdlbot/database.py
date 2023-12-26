@@ -25,7 +25,7 @@ import requests
 from beautifultable import BeautifulTable
 from influxdb import InfluxDBClient
 
-from config import MYSQL_HOST, MYSQL_PASS, MYSQL_USER, REDIS
+from config import IS_BACKUP_BOT, MYSQL_HOST, MYSQL_PASS, MYSQL_USER, REDIS
 
 init_con = sqlite3.connect(":memory:", check_same_thread=False)
 
@@ -71,12 +71,13 @@ class Cursor:
 
 class Redis:
     def __init__(self):
+        db = 1 if IS_BACKUP_BOT else 0
         try:
-            self.r = redis.StrictRedis(host=REDIS, db=0, decode_responses=True)
+            self.r = redis.StrictRedis(host=REDIS, db=db, decode_responses=True)
             self.r.ping()
         except Exception:
-            logging.debug("Redis connection failed, using fake redis instead.")
-            self.r = fakeredis.FakeStrictRedis(host=REDIS, db=0, decode_responses=True)
+            logging.warning("Redis connection failed, using fake redis instead.")
+            self.r = fakeredis.FakeStrictRedis(host=REDIS, db=db, decode_responses=True)
 
         db_banner = "=" * 20 + "DB data" + "=" * 20
         quota_banner = "=" * 20 + "Celery" + "=" * 20
@@ -181,6 +182,8 @@ class Redis:
             if k.startswith("today"):
                 self.r.hdel("metrics", k)
 
+        self.r.delete("premium")
+
     def user_count(self, user_id):
         self.r.hincrby("metrics", user_id)
 
@@ -255,8 +258,9 @@ class MySQL:
             self.con = pymysql.connect(
                 host=MYSQL_HOST, user=MYSQL_USER, passwd=MYSQL_PASS, db="ytdl", charset="utf8mb4"
             )
+            self.con.ping(reconnect = True)
         except Exception:
-            logging.debug("MySQL connection failed, using fake mysql instead.")
+            logging.warning("MySQL connection failed, using fake mysql instead.")
             self.con = FakeMySQL()
 
         self.con.ping(reconnect=True)

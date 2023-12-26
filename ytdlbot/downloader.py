@@ -7,18 +7,18 @@
 
 __author__ = "Benny <benny.think@gmail.com>"
 
+import functools
 import logging
 import os
 import pathlib
-import random
 import re
 import subprocess
+import threading
 import time
 import traceback
 from io import StringIO
 from unittest.mock import MagicMock
 
-import fakeredis
 import ffmpeg
 import ffpb
 import filetype
@@ -27,21 +27,54 @@ import yt_dlp as ytdl
 from pyrogram import types
 from tqdm import tqdm
 
-from config import AUDIO_FORMAT, ENABLE_ARIA2, ENABLE_FFMPEG, TG_MAX_SIZE, IPv6
+from config import (
+    AUDIO_FORMAT,
+    ENABLE_ARIA2,
+    ENABLE_FFMPEG,
+    PREMIUM_USER,
+    TG_NORMAL_MAX_SIZE,
+    TG_PREMIUM_MAX_SIZE,
+    FileTooBig,
+    IPv6,
+)
 from limit import Payment
 from utils import adjust_formats, apply_log_formatter, current_time, sizeof_fmt
 
-r = fakeredis.FakeStrictRedis()
 apply_log_formatter()
 
 
+def debounce(wait_seconds):
+    """
+    Thread-safe debounce decorator for functions that take a message with chat.id and msg.id attributes.
+    The function will only be called if it hasn't been called with the same chat.id and msg.id in the last 'wait_seconds'.
+    """
+
+    def decorator(func):
+        last_called = {}
+        lock = threading.Lock()
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            nonlocal last_called
+            now = time.time()
+
+            # Assuming the first argument is the message object with chat.id and msg.id
+            bot_msg = args[0]
+            key = (bot_msg.chat.id, bot_msg.id)
+
+            with lock:
+                if key not in last_called or now - last_called[key] >= wait_seconds:
+                    last_called[key] = now
+                    return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+@debounce(5)
 def edit_text(bot_msg: types.Message, text: str):
-    key = f"{bot_msg.chat.id}-{bot_msg.id}"
-    # if the key exists, we shouldn't send edit message
-    if not r.exists(key):
-        time.sleep(random.random())
-        r.set(key, "ok", ex=3)
-        bot_msg.edit_text(text)
+    bot_msg.edit_text(text)
 
 
 def tqdm_progress(desc, total, finished, speed="", eta=""):
@@ -91,15 +124,20 @@ def download_hook(d: dict, bot_msg):
     if d["status"] == "downloading":
         downloaded = d.get("downloaded_bytes", 0)
         total = d.get("total_bytes") or d.get("total_bytes_estimate", 0)
-        if total > TG_MAX_SIZE:
-            raise Exception(f"Your download file size {sizeof_fmt(total)} is too large for Telegram.")
+        if total > TG_PREMIUM_MAX_SIZE:
+            raise Exception(f"There's no way to handle a file of {sizeof_fmt(total)}.")
+        if total > TG_NORMAL_MAX_SIZE:
+            msg = f"Your download file size {sizeof_fmt(total)} is too large for Telegram."
+            if PREMIUM_USER:
+                raise FileTooBig(msg)
+            else:
+                raise Exception(msg)
 
         # percent = remove_bash_color(d.get("_percent_str", "N/A"))
         speed = remove_bash_color(d.get("_speed_str", "N/A"))
         eta = remove_bash_color(d.get("_eta_str", d.get("eta")))
         text = tqdm_progress("Downloading...", total, downloaded, speed, eta)
         edit_text(bot_msg, text)
-        r.set(key, "ok", ex=5)
 
 
 def upload_hook(current, total, bot_msg):
@@ -199,6 +237,8 @@ def ytdl_download(url: str, tempdir: str, bm, **kwargs) -> list:
                     ydl.download([url])
                 video_paths = list(pathlib.Path(tempdir).glob("*"))
                 break
+            except FileTooBig as e:
+                raise e
             except Exception:
                 error = traceback.format_exc()
                 logging.error("Download failed for %s - %s, try another way", format_, url)
@@ -255,10 +295,10 @@ def split_large_video(video_paths: list):
     split = False
     for original_video in video_paths:
         size = os.stat(original_video).st_size
-        if size > TG_MAX_SIZE:
+        if size > TG_NORMAL_MAX_SIZE:
             split = True
             logging.warning("file is too large %s, splitting...", size)
-            subprocess.check_output(f"sh split-video.sh {original_video} {TG_MAX_SIZE * 0.95} ".split())
+            subprocess.check_output(f"sh split-video.sh {original_video} {TG_NORMAL_MAX_SIZE * 0.95} ".split())
             os.remove(original_video)
 
     if split and original_video:
