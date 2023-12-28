@@ -517,8 +517,6 @@ def purge_tasks():
 
 
 def run_celery():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     worker_name = os.getenv("WORKER_NAME", "")
     argv = ["-A", "tasks", "worker", "--loglevel=info", "--pool=threads", f"--concurrency={WORKERS}", "-n", worker_name]
     app.worker_main(argv)
